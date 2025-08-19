@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KoboToolbox Interactive Map</title>
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            margin: 10px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar {
+            width: 350px;
+            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ecf0f1;
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .data-config {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .data-config h3 {
+            color: #3498db;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .load-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .load-btn:hover {
+            background: linear-gradient(45deg, #2980b9, #1f5582);
+        }
+
+        .load-btn:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+        }
+
+        .stats {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .stats-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #3498db;
+            display: block;
+        }
+
+        .stats-label {
+            font-size: 14px;
+            color: #ecf0f1;
+            margin-top: 5px;
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .filter-section h3 {
+            color: #3498db;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filter-button {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(52, 152, 219, 0.5);
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: capitalize;
+        }
+
+        .filter-button:hover {
+            background: rgba(52, 152, 219, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .filter-button.active {
+            background: #3498db;
+            border-color: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.4);
+        }
+
+        #map {
+            flex: 1;
+            position: relative;
+        }
+
+        .maplibregl-popup-content {
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .popup-content h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .popup-content p {
+            margin: 5px 0;
+            color: #34495e;
+            font-size: 14px;
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(44, 62, 80, 0.9);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            z-index: 10000;
+        }
+
+        .error-message {
+            background: #e74c3c;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: #27ae60;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .resources-container {
+            margin-top: 10px;
+        }
+
+        .service-tag {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 2px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .service-tag:hover {
+            background: #2980b9;
+        }
+
+        .service-tag.active {
+            background: #e74c3c;
+        }
+
+        .service-details {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+
+        .service-details.active {
+            display: block;
+        }
+
+        .service-details h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .service-info {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .language-tag {
+            display: inline-block;
+            padding: 2px 6px;
+            margin: 1px;
+            background: #3498db;
+            color: white;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>KoboToolbox Data Map</h1>
+            
+            <div class="data-config">
+                <h3>📡 Data Source</h3>
+                <p style="font-size: 12px; margin-bottom: 10px;">Loading data from static JSON file</p>
+                <button id="loadData" class="load-btn">Load Data</button>
+            </div>
+            
+            <div class="stats">
+                <span class="stats-number" id="recordCount">0</span>
+                <span class="stats-label">Records Found</span>
+            </div>
+
+            <div class="filter-section" id="filtersSection" style="display: none;">
+                <h3>🔍 Filters</h3>
+                <div id="dynamicFilters">
+                    <!-- Dynamic filters will be populated here -->
+                </div>
+            </div>
+
+            <div id="errorMessages"></div>
+        </div>
+
+        <div id="map"></div>
+    </div>
+
+    <div id="loading" class="loading" style="display: none;">Loading data...</div>
+
+    <script>
+        // Global variables
+        let map;
+        let originalData = [];
+        let filteredData = [];
+
+        // Initialize the map
+        function initMap() {
+            map = new maplibregl.Map({
+                container: 'map',
+                style: {
+                    'version': 8,
+                    'sources': {
+                        'osm': {
+                            'type': 'raster',
+                            'tiles': ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                            'tileSize': 256,
+                            'attribution': '© OpenStreetMap contributors'
+                        }
+                    },
+                    'layers': [{
+                        'id': 'osm',
+                        'type': 'raster',
+                        'source': 'osm'
+                    }]
+                },
+                center: [-75.1652, 39.9526], // Philadelphia default
+                zoom: 11
+            });
+
+            map.on('load', () => {
+                setupMapInteractions();
+            });
+        }
+
+        // Load data from static JSON file
+        async function loadData() {
+            try {
+                showLoading('Loading data...');
+                
+                // Fetch data from static JSON file
+                const response = await fetch('./data.json');
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load data: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Handle both direct array and nested results structure
+                originalData = data.results || data || [];
+                
+                console.log('Loaded data:', originalData.length, 'records');
+                
+                processData();
+                setupDynamicFilters();
+                updateMap();
+                
+                showSuccess(`Successfully loaded ${originalData.length} records`);
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError(`Error loading data: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Process the data
+        function processData() {
+            console.log('Processing data...');
+            
+            if (originalData.length > 0) {
+                console.log('Available fields:', Object.keys(originalData[0]));
+                console.log('Sample record:', originalData[0]);
+            }
+
+            // Filter records that have geolocation data
+            filteredData = originalData.filter(row => {
+                if (!row._geolocation || !Array.isArray(row._geolocation) || row._geolocation.length < 2) {
+                    return false;
+                }
+                
+                const lat = parseFloat(row._geolocation[0]);
+                const lng = parseFloat(row._geolocation[1]);
+                
+                return !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+            });
+            
+            console.log(`Filtered data: ${originalData.length} -> ${filteredData.length} records with valid coordinates`);
+            updateStats();
+        }
+
+        // Setup dynamic filters - only for specific lang and resources fields
+        function setupDynamicFilters() {
+            if (!originalData || originalData.length === 0) return;
+
+            const filtersContainer = document.getElementById('dynamicFilters');
+            filtersContainer.innerHTML = '';
+            
+            // Look specifically for exact field names
+            const targetFields = {};
+            
+            // Check for exact field names
+            if (originalData[0].hasOwnProperty('lang')) {
+                targetFields['lang'] = {
+                    label: 'Languages',
+                    icon: '🗣️'
+                };
+            }
+            
+            if (originalData[0].hasOwnProperty('group_res/Resources')) {
+                targetFields['group_res/Resources'] = {
+                    label: 'Resources',
+                    icon: '📋'
+                };
+            }
+            
+            console.log('Target filter fields found:', Object.keys(targetFields));
+            console.log('Available fields in data:', Object.keys(originalData[0]));
+            
+            // Create filter controls for each target field
+            for (const [field, config] of Object.entries(targetFields)) {
+                // Get unique values for this field (space-separated)
+                const allValues = originalData
+                    .map(item => item[field])
+                    .filter(v => v && v !== '' && typeof v === 'string')
+                    .map(v => v.split(' ').map(s => s.trim()).filter(s => s !== ''))
+                    .flat();
+                
+                const uniqueValues = [...new Set(allValues)].sort();
+                
+                if (uniqueValues.length === 0) {
+                    console.log(`No values found for field: ${field}`);
+                    continue;
+                }
+                
+                console.log(`Creating filter for ${field} with values:`, uniqueValues);
+                
+                const filterDiv = document.createElement('div');
+                filterDiv.className = 'filter-section';
+                
+                const label = document.createElement('h3');
+                label.textContent = `${config.icon} ${config.label}`;
+                filterDiv.appendChild(label);
+                
+                const buttonContainer = document.createElement('div');
+                buttonContainer.className = 'filter-buttons';
+                
+                uniqueValues.forEach(value => {
+                    const button = document.createElement('button');
+                    button.className = 'filter-button';
+                    button.textContent = value;
+                    button.setAttribute('data-field', field);
+                    button.setAttribute('data-value', value);
+                    button.addEventListener('click', toggleFilter);
+                    
+                    buttonContainer.appendChild(button);
+                });
+                
+                filterDiv.appendChild(buttonContainer);
+                filtersContainer.appendChild(filterDiv);
+            }
+            
+            if (Object.keys(targetFields).length > 0) {
+                document.getElementById('filtersSection').style.display = 'block';
+            } else {
+                console.log('No target fields found. Available fields:', Object.keys(originalData[0]));
+            }
+        }
+
+        // Toggle filter button state
+        function toggleFilter(event) {
+            const button = event.target;
+            button.classList.toggle('active');
+            applyFilters();
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const activeButtons = document.querySelectorAll('#dynamicFilters .filter-button.active');
+            const activeFilters = {};
+            
+            activeButtons.forEach(button => {
+                const field = button.getAttribute('data-field');
+                const value = button.getAttribute('data-value');
+                
+                if (!activeFilters[field]) {
+                    activeFilters[field] = [];
+                }
+                activeFilters[field].push(value);
+            });
+            
+            console.log('Applying filters:', activeFilters);
+            
+            filteredData = originalData.filter(row => {
+                // Must have valid geolocation
+                if (!row._geolocation || !Array.isArray(row._geolocation) || row._geolocation.length < 2) {
+                    return false;
+                }
+                
+                const lat = parseFloat(row._geolocation[0]);
+                const lng = parseFloat(row._geolocation[1]);
+                
+                if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
+                    return false;
+                }
+                
+                // Check active filters
+                for (const [field, filterValues] of Object.entries(activeFilters)) {
+                    const fieldValue = row[field];
+                    if (!fieldValue || typeof fieldValue !== 'string') return false;
+                    
+                    // Handle space-separated values
+                    const fieldItems = fieldValue.split(' ').map(s => s.trim()).filter(s => s !== '');
+                    
+                    // Check if any of the filter values match any of the field items
+                    const matchFound = filterValues.some(filterValue => 
+                        fieldItems.some(item => item.toLowerCase() === filterValue.toLowerCase())
+                    );
+                    
+                    if (!matchFound) return false;
+                }
+                
+                return true;
+            });
+            
+            updateMap();
+            updateStats();
+        }
+
+        // Update map using geolocation data
+        async function updateMap() {
+            // Remove existing layers
+            if (map.getLayer('data-points')) {
+                map.removeLayer('data-points');
+            }
+            if (map.getSource('data-points')) {
+                map.removeSource('data-points');
+            }
+
+            if (filteredData.length === 0) {
+                console.log('No data to display on map');
+                return;
+            }
+
+            console.log(`Displaying ${filteredData.length} points on map`);
+            
+            // Create features from geolocation data
+            const features = filteredData.map(row => {
+                const lat = parseFloat(row._geolocation[0]);
+                const lng = parseFloat(row._geolocation[1]);
+                
+                return {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [lng, lat] // GeoJSON uses [lng, lat] format
+                    },
+                    properties: {
+                        ...row
+                    }
+                };
+            });
+
+            // Add to map
+            const geojson = {
+                type: 'FeatureCollection',
+                features: features
+            };
+
+            map.addSource('data-points', {
+                type: 'geojson',
+                data: geojson
+            });
+
+            map.addLayer({
+                id: 'data-points',
+                type: 'circle',
+                source: 'data-points',
+                paint: {
+                    'circle-radius': 8,
+                    'circle-color': '#3498db',
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#ffffff'
+                }
+            });
+
+            // Fit to bounds
+            if (features.length > 0) {
+                const bounds = new maplibregl.LngLatBounds();
+                features.forEach(feature => {
+                    bounds.extend(feature.geometry.coordinates);
+                });
+                map.fitBounds(bounds, { padding: 50 });
+            }
+            
+            console.log(`Successfully added ${features.length} points to map`);
+        }
+
+        // Setup map interactions
+        function setupMapInteractions() {
+            map.on('click', 'data-points', (e) => {
+                const feature = e.features[0];
+                const properties = feature.properties;
+
+                let popupContent = '<div class="popup-content">';
+                
+                // Congregation name
+                const congName = properties.cong_name || properties.name || 'Unknown Congregation';
+                popupContent += `<h3>${congName}</h3>`;
+                
+                // Address
+                if (properties.address) {
+                    popupContent += `<p><strong>📍 Address:</strong> ${properties.address}</p>`;
+                }
+                
+                // Phone
+                if (properties.phone) {
+                    popupContent += `<p><strong>📞 Phone:</strong> ${properties.phone}</p>`;
+                }
+                
+                // Languages
+                if (properties.lang && properties.lang !== '') {
+                    const languages = properties.lang.split(' ').filter(lang => lang.trim() !== '').map(lang => 
+                        `<span class="language-tag">${lang.trim()}</span>`
+                    ).join('');
+                    popupContent += `<p><strong>🗣️ Languages:</strong><br>${languages}</p>`;
+                }
+                
+                // Available Resources with buttons
+                if (properties['group_res/Resources'] && properties['group_res/Resources'] !== '') {
+                    const resources = properties['group_res/Resources'].split(' ').filter(res => res.trim() !== '');
+                    
+                    popupContent += `<p><strong>📋 Available Resources:</strong></p>`;
+                    popupContent += `<div class="resources-container">`;
+                    
+                    resources.forEach(resource => {
+                        const resourceId = `resource-${Math.random().toString(36).substr(2, 9)}`;
+                        popupContent += `<button class="service-tag" onclick="toggleResourceDetails('${resourceId}', '${resource}', this)" data-resource="${resource}">${resource}</button>`;
+                        popupContent += `<div id="${resourceId}" class="service-details"></div>`;
+                    });
+                    
+                    popupContent += `</div>`;
+                }
+                
+                popupContent += '</div>';
+
+                const popup = new maplibregl.Popup({
+                    maxWidth: '350px'
+                })
+                    .setLngLat(feature.geometry.coordinates)
+                    .setHTML(popupContent)
+                    .addTo(map);
+
+                // Store the feature properties for use in the resource details function
+                window.currentFeatureProperties = properties;
+            });
+
+            map.on('mouseenter', 'data-points', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'data-points', () => {
+                map.getCanvas().style.cursor = '';
+            });
+        }
+
+        // Function to toggle resource details
+        window.toggleResourceDetails = function(detailsId, resourceName, buttonElement) {
+            const detailsDiv = document.getElementById(detailsId);
+            const isActive = buttonElement.classList.contains('active');
+            
+            // Close all other resource details
+            document.querySelectorAll('.service-tag').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.service-details').forEach(div => {
+                div.classList.remove('active');
+            });
+            
+            if (!isActive) {
+                // Open this resource detail
+                buttonElement.classList.add('active');
+                detailsDiv.classList.add('active');
+                
+                // Get resource details from the stored properties
+                const resourceDetails = getResourceDetails(window.currentFeatureProperties, resourceName);
+                detailsDiv.innerHTML = resourceDetails;
+            }
+        };
+
+        // Function to get resource details based on resource type
+        function getResourceDetails(properties, resourceName) {
+            console.log('Getting details for resource:', resourceName);
+            console.log('Available properties:', Object.keys(properties));
+            
+            let details = `<h4>${resourceName} Service Details</h4><div class="service-info">`;
+            
+            // Map resource names to their corresponding field paths (now handling arrays)
+            const resourceFieldMap = {
+                'food': {
+                    arrayPath: 'group_schgen/group_foodsch/group_aw4ip21_row',
+                    fields: {
+                        type: 'group_schgen/group_foodsch/group_aw4ip21_row/group_aw4ip21_row_type',
+                        season: 'group_schgen/group_foodsch/group_aw4ip21_row/group_aw4ip21_row_seas',
+                        days: 'group_schgen/group_foodsch/group_aw4ip21_row/group_aw4ip21_row_days',
+                        hours: 'group_schgen/group_foodsch/group_aw4ip21_row/group_aw4ip21_row_hou',
+                        notes: 'group_schgen/group_foodsch/group_aw4ip21_row/group_aw4ip21_row_notes'
+                    },
+                    fallbackFields: {
+                        type: 'group_res/Type_of_food',
+                        other: 'group_res/Other_food'
+                    }
+                },
+                'clothing': {
+                    arrayPath: 'group_schgen/group_clothsch/group_aw4ip22_row',
+                    fields: {
+                        type: 'group_schgen/group_clothsch/group_aw4ip22_row/group_aw4ip22_row_type',
+                        season: 'group_schgen/group_clothsch/group_aw4ip22_row/group_aw4ip22_row_seas',
+                        days: 'group_schgen/group_clothsch/group_aw4ip22_row/group_aw4ip22_row_days',
+                        hours: 'group_schgen/group_clothsch/group_aw4ip22_row/group_aw4ip22_row_hou',
+                        notes: 'group_schgen/group_clothsch/group_aw4ip22_row/group_aw4ip22_row_notes'
+                    },
+                    fallbackFields: {
+                        type: 'group_res/Type_of_clothing'
+                    }
+                },
+                'housing': {
+                    arrayPath: 'group_schgen/group_homesch/group_aw4ip24_row',
+                    fields: {
+                        type: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_type',
+                        season: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_seas',
+                        days: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_days',
+                        hours: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_hou',
+                        notes: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_notes'
+                    }
+                },
+                'home': {
+                    arrayPath: 'group_schgen/group_homesch/group_aw4ip24_row',
+                    fields: {
+                        type: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_type',
+                        season: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_seas',
+                        days: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_days',
+                        hours: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_hou',
+                        notes: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_notes'
+                    }
+                },
+                'home_articles': {
+                    arrayPath: 'group_schgen/group_homesch/group_aw4ip24_row',
+                    fields: {
+                        type: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_type',
+                        season: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_seas',
+                        days: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_days',
+                        hours: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_hou',
+                        notes: 'group_schgen/group_homesch/group_aw4ip24_row/group_aw4ip24_row_notes'
+                    },
+                    fallbackFields: {
+                        type: 'group_res/Type_of_article'
+                    }
+                },
+                'other': {
+                    // For "other" services, we'll search broadly
+                    arrayPath: null,
+                    fields: {},
+                    fallbackFields: {}
+                }
+            };
+            
+            // Get the field mapping for this resource (case-insensitive)
+            let resourceKey = Object.keys(resourceFieldMap).find(key => 
+                key.toLowerCase() === resourceName.toLowerCase()
+            );
+            
+            console.log('Resource key found:', resourceKey);
+            
+            if (resourceKey && resourceFieldMap[resourceKey]) {
+                const config = resourceFieldMap[resourceKey];
+                let hasDetails = false;
+                
+                console.log('Config for', resourceKey, ':', config);
+                
+                // Try to get data from the array first
+                if (config.arrayPath) {
+                    let dataArray = properties[config.arrayPath];
+                    console.log('Raw array data for', config.arrayPath, ':', dataArray);
+                    console.log('Data type:', typeof dataArray);
+                    
+                    // Check if it's a JSON string that needs parsing
+                    if (typeof dataArray === 'string') {
+                        try {
+                            dataArray = JSON.parse(dataArray);
+                            console.log('Parsed JSON string to array:', dataArray);
+                        } catch (e) {
+                            console.log('Failed to parse as JSON:', e);
+                            dataArray = null;
+                        }
+                    }
+                    
+                    console.log('Array check - isArray:', Array.isArray(dataArray), 'length:', dataArray ? dataArray.length : 'N/A');
+                    
+                    if (dataArray && Array.isArray(dataArray) && dataArray.length > 0) {
+                        // Get the first element of the array
+                        const serviceData = dataArray[0];
+                        console.log('Service data found:', serviceData);
+                        console.log('Available fields in service data:', Object.keys(serviceData));
+                        
+                        // Process each field in the service data
+                        Object.keys(serviceData).forEach(key => {
+                            const value = serviceData[key];
+                            console.log(`Processing field: ${key} = ${value}`);
+                            
+                            if (value && value !== '') {
+                                if (key.includes('_type')) {
+                                    details += `<strong>Type:</strong> ${value.replace(/_/g, ' ')}<br>`;
+                                    hasDetails = true;
+                                    console.log('✓ Added type:', value);
+                                } else if (key.includes('_seas')) {
+                                    details += `<strong>Season:</strong> ${value}<br>`;
+                                    hasDetails = true;
+                                    console.log('✓ Added season:', value);
+                                } else if (key.includes('_days')) {
+                                    let days = value;
+                                    // Expand common abbreviations
+                                    days = days.replace(/\bmon\b/gi, 'Monday')
+                                              .replace(/\btue\b/gi, 'Tuesday')
+                                              .replace(/\bwed\b/gi, 'Wednesday')
+                                              .replace(/\bthu\b/gi, 'Thursday')
+                                              .replace(/\bfri\b/gi, 'Friday')
+                                              .replace(/\bsat\b/gi, 'Saturday')
+                                              .replace(/\bsun\b/gi, 'Sunday');
+                                    details += `<strong>Days:</strong> ${days}<br>`;
+                                    hasDetails = true;
+                                    console.log('✓ Added days:', days);
+                                } else if (key.includes('_hou')) {
+                                    let hours = value;
+                                    // Format hours nicely if they're space-separated
+                                    if (hours.includes(' ') && !hours.includes('-') && !hours.includes('to')) {
+                                        const hoursList = hours.split(' ').filter(h => h.trim());
+                                        if (hoursList.length > 1) {
+                                            hours = `${hoursList[0]} - ${hoursList[hoursList.length - 1]}`;
+                                        }
+                                    }
+                                    details += `<strong>Hours:</strong> ${hours}<br>`;
+                                    hasDetails = true;
+                                    console.log('✓ Added hours:', hours);
+                                } else if (key.includes('_notes')) {
+                                    details += `<strong>Notes:</strong> ${value}<br>`;
+                                    hasDetails = true;
+                                    console.log('✓ Added notes:', value);
+                                }
+                            }
+                        });
+                        
+                        console.log('HasDetails after processing array:', hasDetails);
+                    } else {
+                        console.log('Array validation failed:');
+                        console.log('- dataArray exists:', !!dataArray);
+                        console.log('- is Array:', Array.isArray(dataArray));
+                        console.log('- length > 0:', dataArray && dataArray.length > 0);
+                        console.log('No valid array data found');
+                    }
+                }
+                
+                // Only try fallback if we haven't found details yet
+                if (!hasDetails && config.fallbackFields) {
+                    console.log('Trying fallback fields:', config.fallbackFields);
+                    
+                    for (const [label, fieldPath] of Object.entries(config.fallbackFields)) {
+                        if (properties[fieldPath]) {
+                            const displayLabel = label.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            details += `<strong>${displayLabel}:</strong> ${properties[fieldPath].replace(/_/g, ' ')}<br>`;
+                            hasDetails = true;
+                            console.log('✓ Added fallback:', label, '=', properties[fieldPath]);
+                        }
+                    }
+                }
+                
+                // If still no details and this is "other", search more broadly
+                if (!hasDetails && resourceName.toLowerCase() === 'other') {
+                    console.log('Searching for other service details...');
+                    
+                    // Look for general notes
+                    if (properties['group_yd9mm37/general_notes']) {
+                        details += `<strong>Notes:</strong> ${properties['group_yd9mm37/general_notes']}<br>`;
+                        hasDetails = true;
+                    }
+                    
+                    // Look for any "other" type fields
+                    for (const [key, value] of Object.entries(properties)) {
+                        if (key.toLowerCase().includes('other') && 
+                            value && value !== '' && 
+                            typeof value === 'string' &&
+                            !key.includes('group_yd9mm37')) { // Avoid duplicate general notes
+                            const displayKey = key.split('/').pop().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            details += `<strong>${displayKey}:</strong> ${value}<br>`;
+                            hasDetails = true;
+                        }
+                    }
+                }
+                
+                // If no specific details found, show a generic message
+                if (!hasDetails) {
+                    details += `Service available. Contact congregation for details.`;
+                }
+            } else {
+                console.log('No specific mapping found for:', resourceName);
+                // Generic search for any related fields
+                let foundDetails = false;
+                
+                for (const [key, value] of Object.entries(properties)) {
+                    if (key.toLowerCase().includes(resourceName.toLowerCase()) && 
+                        value && value !== '' && 
+                        typeof value === 'string') {
+                        const displayKey = key.split('/').pop().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        details += `<strong>${displayKey}:</strong> ${value}<br>`;
+                        foundDetails = true;
+                    }
+                }
+                
+                if (!foundDetails) {
+                    details += `Service available. Contact congregation for detailed information.`;
+                }
+            }
+            
+            details += '</div>';
+            console.log('Final details:', details);
+            return details;
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('recordCount').textContent = filteredData.length;
+        }
+
+        // Utility functions
+        function showLoading(message) {
+            const loadingEl = document.getElementById('loading');
+            loadingEl.textContent = message;
+            loadingEl.style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.textContent = message;
+            document.getElementById('errorMessages').appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 5000);
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            document.getElementById('errorMessages').appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 8000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            document.getElementById('loadData').addEventListener('click', loadData);
+        });
+    </script>
+</body>
+</html>

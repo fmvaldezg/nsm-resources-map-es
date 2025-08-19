@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Address Geocoding Map</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+        .control-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+            max-width: 400px;
+            min-width: 300px;
+        }
+        .stats {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .geocoding-status {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .geocoding-status.processing {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .geocoding-status.complete {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .geocoding-status.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .address-field-selector {
+            margin-bottom: 15px;
+        }
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        .filter-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        select, button, input {
+            margin-top: 5px;
+            padding: 10px;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            margin-bottom: 5px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        button.secondary {
+            background-color: #95a5a6;
+        }
+        button.secondary:hover {
+            background-color: #7f8c8d;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            z-index: 1001;
+            display: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .debug-info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-width: 400px;
+            display: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .marker-success {
+            background-color: #27ae60;
+        }
+        .marker-failed {
+            background-color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div id="loading">
+        <div class="spinner"></div>
+        <div id="loading-text">Loading your form data...</div>
+        <div class="progress-bar" id="progress-container" style="display: none;">
+            <div class="progress-fill" id="progress-bar"></div>
+        </div>
+        <div id="progress-text"></div>
+    </div>
+    
+    <div class="control-panel">
+        <h3>Address Geocoding Map</h3>
+        
+        <div class="stats" id="stats">
+            <div>Total Records: <span id="total-count">0</span></div>
+            <div>Successfully Mapped: <span id="mapped-count">0</span></div>
+            <div>Failed to Geocode: <span id="failed-count">0</span></div>
+        </div>
+        
+        <div class="geocoding-status" id="geocoding-status" style="display: none;">
+            <div id="status-text">Ready to geocode</div>
+        </div>
+        
+        <div class="address-field-selector">
+            <label for="address-field-select">Address Field:</label>
+            <select id="address-field-select">
+                <option value="">Select address field...</option>
+            </select>
+        </div>
+        
+        <div id="filters-container">
+            <!-- Filters will be added dynamically based on your data -->
+        </div>
+        
+        <button id="load-btn">Load Data</button>
+        <button id="geocode-btn" class="secondary" disabled>Start Geocoding</button>
+        <button id="clear-cache-btn" class="secondary">Clear Cache</button>
+        <button id="debug-btn" class="secondary" onclick="toggleDebug()">Toggle Debug</button>
+    </div>
+    
+    <div class="debug-info" id="debug-info">
+        Debug information will appear here
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+    <script>
+        // Initialize map - you can change the default coordinates and zoom level
+        const map = L.map('map').setView([40.0, -75.0], 10); // Adjust as needed
+        
+        // Add OpenStreetMap base layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Initialize marker cluster group
+        const markers = L.markerClusterGroup({
+            maxClusterRadius: 50,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false
+        });
+        map.addLayer(markers);
+        
+        // Store all data
+        let allData = [];
+        let filteredData = [];
+        let geocodedData = [];
+        let selectedAddressField = '';
+        
+        // Debug mode toggle
+        function toggleDebug() {
+            const debugInfo = document.getElementById('debug-info');
+            debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Function to detect potential address fields in the data
+        function detectAddressFields(data) {
+            if (!data || data.length === 0) return [];
+            
+            const sample = data[0];
+            const addressFields = [];
+            
+            // Common address field patterns
+            const addressPatterns = [
+                'address', 'street', 'location', 'place', 'venue', 'site',
+                'where', 'building', 'facility', 'property', 'residence',
+                'home', 'office', 'school', 'hospital', 'clinic'
+            ];
+            
+            // Look for fields that might contain address data
+            for (const key of Object.keys(sample)) {
+                const value = sample[key];
+                
+                // Skip system fields and non-string fields
+                if (key.startsWith('_') || typeof value !== 'string' || !value.trim()) {
+                    continue;
+                }
+                
+                // Check if field name suggests it contains address data
+                const keyLower = key.toLowerCase();
+                const isAddressField = addressPatterns.some(pattern => 
+                    keyLower.includes(pattern)
+                );
+                
+                if (isAddressField) {
+                    addressFields.push({
+                        field: key,
+                        sample: value,
+                        confidence: 'high'
+                    });
+                } else {
+                    // Check if the content looks like an address
+                    const words = value.split(/\s+/);
+                    const hasNumber = /\d/.test(value);
+                    const hasStreetWords = /\b(st|street|ave|avenue|rd|road|blvd|boulevard|dr|drive|ln|lane|way|ct|court)\b/i.test(value);
+                    
+                    if (words.length >= 3 && hasNumber && hasStreetWords) {
+                        addressFields.push({
+                            field: key,
+                            sample: value,
+                            confidence: 'medium'
+                        });
+                    } else if (words.length >= 2 && hasNumber) {
+                        addressFields.push({
+                            field: key,
+                            sample: value,
+                            confidence: 'low'
+                        });
+                    }
+                }
+            }
+            
+            // Sort by confidence
+            addressFields.sort((a, b) => {
+                const confidenceOrder = { high: 3, medium: 2, low: 1 };
+                return confidenceOrder[b.confidence] - confidenceOrder[a.confidence];
+            });
+            
+            return addressFields;
+        }
+        
+        // Function to populate address field selector
+        function populateAddressFieldSelector(data) {
+            const selector = document.getElementById('address-field-select');
+            selector.innerHTML = '<option value="">Select address field...</option>';
+            
+            const addressFields = detectAddressFields(data);
+            
+            addressFields.forEach(({ field, sample, confidence }) => {
+                const option = document.createElement('option');
+                option.value = field;
+                option.textContent = `${field} (${confidence} confidence) - "${sample.substring(0, 50)}..."`;
+                selector.appendChild(option);
+            });
+            
+            // Auto-select the first high-confidence field
+            if (addressFields.length > 0 && addressFields[0].confidence === 'high') {
+                selector.value = addressFields[0].field;
+                selectedAddressField = addressFields[0].field;
+                document.getElementById('geocode-btn').disabled = false;
+            }
+        }
+        
+        // Function to create a popup for each marker
+        function createPopup(item, geocodeResult = null) {
+            let popup = '<div style="max-width: 250px;">';
+            
+            // Show the address that was geocoded
+            if (selectedAddressField && item[selectedAddressField]) {
+                popup += `<b>Address:</b> ${item[selectedAddressField]}<br>`;
+            }
+            
+            // Show geocoding result if available
+            if (geocodeResult && geocodeResult.display_name) {
+                popup += `<b>Geocoded as:</b> ${geocodeResult.display_name}<br><br>`;
+            }
+            
+            // Show other key fields
+            for (const [key, value] of Object.entries(item)) {
+                if (key.startsWith('_')) continue; // Skip system fields
+                if (key === selectedAddressField) continue; // Already shown above
+                if (!value || value === '') continue; // Skip empty values
+                if (typeof value === 'object') continue; // Skip complex objects
+                
+                const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                popup += `<b>${displayKey}:</b> ${value}<br>`;
+            }
+            
+            // Add submission time if available
+            if (item._submission_time) {
+                popup += `<b>Submitted:</b> ${new Date(item._submission_time).toLocaleString()}<br>`;
+            }
+            
+            popup += '</div>';
+            return popup;
+        }
+        
+        // Function to create dynamic filters based on the data
+        function createDynamicFilters(data) {
+            if (!data || data.length === 0) return;
+            
+            const filtersContainer = document.getElementById('filters-container');
+            filtersContainer.innerHTML = '';
+            
+            // Analyze the data to find filterable fields
+            const sample = data[0];
+            const filterableFields = {};
+            
+            // Look for fields with limited unique values (good for filtering)
+            for (const key of Object.keys(sample)) {
+                if (key.startsWith('_')) continue; // Skip system fields
+                
+                const values = data.map(item => item[key]).filter(v => v && v !== '');
+                const uniqueValues = [...new Set(values)];
+                
+                // Only create filters for fields with 2-20 unique values
+                if (uniqueValues.length >= 2 && uniqueValues.length <= 20) {
+                    filterableFields[key] = uniqueValues.sort();
+                }
+            }
+            
+            console.log('Filterable fields found:', filterableFields);
+            
+            // Create filter controls
+            for (const [field, values] of Object.entries(filterableFields)) {
+                const filterGroup = document.createElement('div');
+                filterGroup.className = 'filter-group';
+                
+                const label = document.createElement('label');
+                label.textContent = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ':';
+                filterGroup.appendChild(label);
+                
+                const select = document.createElement('select');
+                select.setAttribute('data-field', field);
+                select.addEventListener('change', applyFilters);
+                
+                // Add "All" option
+                const allOption = document.createElement('option');
+                allOption.value = 'all';
+                allOption.textContent = 'All';
+                select.appendChild(allOption);
+                
+                // Add options for each unique value
+                values.forEach(value => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = value;
+                    select.appendChild(option);
+                });
+                
+                filterGroup.appendChild(select);
+                filtersContainer.appendChild(filterGroup);
+            }
+        }
+        
+        // Function to apply filters
+        function applyFilters() {
+            const filters = document.querySelectorAll('#filters-container select');
+            const activeFilters = {};
+            
+            filters.forEach(filter => {
+                const field = filter.getAttribute('data-field');
+                const value = filter.value;
+                if (value !== 'all') {
+                    activeFilters[field] = value;
+                }
+            });
+            
+            filteredData = allData.filter(item => {
+                for (const [field, value] of Object.entries(activeFilters)) {
+                    if (item[field] !== value) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+            
+            // Re-geocode if address field is selected
+            if (selectedAddressField && geocodedData.length > 0) {
+                displayMarkers(filteredData);
+            }
+            
+            updateStats();
+        }
+        
+        // Function to geocode addresses
+        async function geocodeAddresses() {
+            if (!selectedAddressField) {
+                alert('Please select an address field first');
+                return;
+            }
+            
+            const uniqueAddresses = [...new Set(
+                filteredData
+                    .map(item => item[selectedAddressField])
+                    .filter(addr => addr && typeof addr === 'string' && addr.trim())
+                    .map(addr => addr.trim())
+            )];
+            
+            if (uniqueAddresses.length === 0) {
+                alert('No addresses found to geocode');
+                return;
+            }
+            
+            console.log(`Starting geocoding for ${uniqueAddresses.length} unique addresses`);
+            
+            // Show progress
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading-text').textContent = 'Geocoding addresses...';
+            document.getElementById('progress-container').style.display = 'block';
+            
+            const statusDiv = document.getElementById('geocoding-status');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'geocoding-status processing';
+            
+            try {
+                // Batch geocode addresses
+                const response = await fetch('http://localhost:3000/geocode-batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ addresses: uniqueAddresses })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const geocodeResults = await response.json();
+                
+                // Process the results
+                geocodedData = filteredData.map(item => {
+                    const address = item[selectedAddressField];
+                    if (address && geocodeResults[address.trim()]) {
+                        return {
+                            ...item,
+                            _geocode_result: geocodeResults[address.trim()]
+                        };
+                    }
+                    return { ...item, _geocode_result: { success: false } };
+                });
+                
+                statusDiv.className = 'geocoding-status complete';
+                document.getElementById('status-text').textContent = 'Geocoding complete!';
+                
+                displayMarkers(geocodedData);
+                updateStats();
+                
+            } catch (error) {
+                console.error('Geocoding error:', error);
+                statusDiv.className = 'geocoding-status error';
+                document.getElementById('status-text').textContent = `Geocoding failed: ${error.message}`;
+                alert(`Geocoding failed: ${error.message}`);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('progress-container').style.display = 'none';
+            }
+        }
+        
+        // Function to display markers on the map
+        function displayMarkers(data) {
+            markers.clearLayers();
+            
+            if (!data || data.length === 0) {
+                console.log('No data to display');
+                return;
+            }
+            
+            let successCount = 0;
+            let failCount = 0;
+            
+            data.forEach((item, index) => {
+                const geocodeResult = item._geocode_result;
+                
+                if (!geocodeResult || !geocodeResult.success) {
+                    failCount++;
+                    return;
+                }
+                
+                const { lat, lng } = geocodeResult;
+                
+                if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+                    failCount++;
+                    return;
+                }
+                
+                // Create marker with color based on geocoding success
+                const marker = L.circleMarker([lat, lng], {
+                    radius: 8,
+                    fillColor: '#27ae60', // Green for successfully geocoded
+                    color: '#2c3e50',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+                
+                // Add popup
+                marker.bindPopup(createPopup(item, geocodeResult));
+                
+                markers.addLayer(marker);
+                successCount++;
+            });
+            
+            console.log(`Successfully displayed ${successCount} markers, ${failCount} failed`);
+            
+            // Fit map to show all markers
+            if (successCount > 0) {
+                map.fitBounds(markers.getBounds(), { padding: [20, 20] });
+            }
+            
+            // Update debug info
+            updateDebugInfo(selectedAddressField, successCount, failCount, data.length);
+        }
+        
+        // Function to update statistics
+        function updateStats() {
+            document.getElementById('total-count').textContent = allData.length;
+            
+            if (geocodedData.length > 0) {
+                const mapped = geocodedData.filter(item => item._geocode_result && item._geocode_result.success).length;
+                const failed = geocodedData.length - mapped;
+                document.getElementById('mapped-count').textContent = mapped;
+                document.getElementById('failed-count').textContent = failed;
+            } else {
+                document.getElementById('mapped-count').textContent = '0';
+                document.getElementById('failed-count').textContent = '0';
+            }
+        }
+        
+        // Function to update debug information
+        function updateDebugInfo(addressField, successCount, failCount, totalCount) {
+            const debugInfo = document.getElementById('debug-info');
+            debugInfo.innerHTML = `
+                <strong>Debug Info:</strong><br>
+                Address field: ${addressField}<br>
+                Successful geocoding: ${successCount}/${totalCount}<br>
+                Failed geocoding: ${failCount}<br>
+                Sample address: ${allData.length > 0 && addressField ? allData[0][addressField] : 'N/A'}<br>
+                <br>
+                Sample data: ${JSON.stringify(allData[0] || {}, null, 2).substring(0, 300)}...
+            `;
+        }
+        
+        // Function to clear geocoding cache
+        async function clearCache() {
+            try {
+                const response = await fetch('http://localhost:3000/clear-cache', {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('Geocoding cache cleared successfully');
+                    console.log('Cache cleared');
+                } else {
+                    throw new Error(`Failed to clear cache: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error clearing cache:', error);
+                alert(`Failed to clear cache: ${error.message}`);
+            }
+        }
+        
+        // Function to load data from the server
+        async function loadData() {
+            try {
+                const loadBtn = document.getElementById('load-btn');
+                loadBtn.disabled = true;
+                loadBtn.textContent = 'Loading...';
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading-text').textContent = 'Loading your form data...';
+                
+                const response = await fetch('http://localhost:3000/kobo-data');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                allData = result.results || [];
+                filteredData = [...allData];
+                geocodedData = []; // Reset geocoded data
+                
+                console.log(`Loaded ${allData.length} records`);
+                
+                // Create filters and populate address field selector
+                createDynamicFilters(allData);
+                populateAddressFieldSelector(allData);
+                updateStats();
+                
+                // Reset geocoding status
+                const statusDiv = document.getElementById('geocoding-status');
+                statusDiv.style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert(`Failed to load data: ${error.message}\n\nMake sure your server is running and the API token is correct.`);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                const loadBtn = document.getElementById('load-btn');
+                loadBtn.disabled = false;
+                loadBtn.textContent = 'Reload Data';
+            }
+        }
+        
+        // Set up event listeners
+        document.getElementById('load-btn').addEventListener('click', loadData);
+        document.getElementById('geocode-btn').addEventListener('click', geocodeAddresses);
+        document.getElementById('clear-cache-btn').addEventListener('click', clearCache);
+        
+        // Address field selection handler
+        document.getElementById('address-field-select').addEventListener('change', (e) => {
+            selectedAddressField = e.target.value;
+            document.getElementById('geocode-btn').disabled = !selectedAddressField;
+            
+            if (selectedAddressField) {
+                document.getElementById('geocode-btn').textContent = `Geocode ${selectedAddressField}`;
+            } else {
+                document.getElementById('geocode-btn').textContent = 'Start Geocoding';
+            }
+        });
+        
+    </script>
+</body>
+</html>
