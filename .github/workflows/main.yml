@@ -1,0 +1,36 @@
+name: Update KoboToolbox Data
+
+on:
+  schedule:
+    # Run daily at 6 AM UTC (adjust timezone as needed)
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allow manual trigger from GitHub Actions tab
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch latest data from KoboToolbox
+        env:
+          KOBO_TOKEN: ${{ secrets.KOBO_TOKEN }}
+        run: |
+          curl -H "Authorization: Token $KOBO_TOKEN" \
+               "https://kf.kobotoolbox.org/api/v2/assets/aPhcaneoEuEZLLQbroHu6C/data.json" \
+               -o data.json
+
+      - name: Commit and push if data changed
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data.json
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "🔄 Update data from KoboToolbox $(date '+%Y-%m-%d %H:%M')"
+            git push
+          fi
