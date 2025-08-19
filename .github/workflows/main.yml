@@ -2,9 +2,9 @@ name: Update KoboToolbox Data
 
 on:
   schedule:
-    # Run daily at 6 AM UTC (adjust timezone as needed)
-    - cron: '0 6 * * *'
-  workflow_dispatch: # Allow manual trigger from GitHub Actions tab
+    # Run on the 1st day of every month at 6 AM UTC
+    - cron: '0 6 1 * *'
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   update-data:
@@ -17,6 +17,8 @@ jobs:
         env:
           KOBO_TOKEN: ${{ secrets.KOBO_TOKEN }}
         run: |
+          echo "🔄 Monthly data update from KoboToolbox..."
+          
           curl -H "Authorization: Token $KOBO_TOKEN" \
                "https://kf.kobotoolbox.org/api/v2/assets/aPhcaneoEuEZLLQbroHu6C/data.json" \
                -o data.json
@@ -29,8 +31,9 @@ jobs:
           
           # Check if there are changes to commit
           if git diff --staged --quiet; then
-            echo "No changes to commit"
+            echo "ℹ️ No changes to commit"
           else
-            git commit -m "🔄 Update data from KoboToolbox $(date '+%Y-%m-%d %H:%M')"
+            git commit -m "📅 Monthly data update from KoboToolbox $(date '+%Y-%m-%d')"
             git push
+            echo "✅ Monthly data update completed"
           fi
