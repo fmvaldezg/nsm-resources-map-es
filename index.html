@@ -26,17 +26,17 @@
             flex-direction: row;
             height: 100vh;
             background: rgba(255, 255, 255, 0.95);
-            margin: 10px;
-            border-radius: 15px;
+            margin: 2px;
+            border-radius: 5px;
             overflow: hidden;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
             position: relative;
         }
 
         .sidebar {
-            width: 400px;
-            min-width: 400px;
-            max-width: 400px;
+            width: 350px;
+            min-width: 350px;
+            max-width: 350px;
             background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
             color: white;
             padding: 20px;
@@ -53,9 +53,9 @@
         }
 
         .right-sidebar {
-            width: 280px;
-            min-width: 280px;
-            max-width: 280px;
+            width: 200px;
+            min-width: 200px;
+            max-width: 200px;
             background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
             color: white;
             padding: 15px;
@@ -143,8 +143,8 @@
             background: rgba(255, 255, 255, 0.1);
             padding: 15px;
             border-radius: 10px;
-            margin-bottom: 20px;
-            max-height: 400px;
+            margin-bottom: 10px;
+            height: calc(100vh - 270px);
             overflow-y: auto;
         }
 
@@ -239,38 +239,87 @@
 
         .right-sidebar .filter-section h3 {
             color: #3498db;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             font-size: 14px;
         }
 
-        .right-sidebar .filter-buttons {
+        /* Toggle Switch Styles */
+        .filter-switches {
             display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .right-sidebar .filter-button {
-            padding: 6px 10px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(52, 152, 219, 0.5);
-            border-radius: 15px;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .filter-switch-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .filter-switch-label {
+            font-size: 12px;
+            color: #ecf0f1;
             text-transform: capitalize;
+            flex: 1;
+            margin-right: 8px;
         }
 
-        .right-sidebar .filter-button:hover {
-            background: rgba(52, 152, 219, 0.3);
-            transform: translateY(-1px);
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
         }
 
-        .right-sidebar .filter-button.active {
-            background: #3498db;
-            border-color: #2980b9;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.4);
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .3s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #3498db;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #3498db;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .slider:hover {
+            background-color: rgba(52, 152, 219, 0.3);
+        }
+
+        input:checked + .slider:hover {
+            background-color: #2980b9;
         }
 
         .maplibregl-popup-content {
@@ -371,14 +420,54 @@
             line-height: 1.4;
         }
 
-        .language-tag {
-            display: inline-block;
-            padding: 2px 6px;
-            margin: 1px;
-            background: #3498db;
+        /* Reset Button Styles */
+        .reset-filters-btn {
+            width: 100%;
+            padding: 8px 12px;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
             color: white;
-            border-radius: 10px;
-            font-size: 11px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .reset-filters-btn:hover {
+            background: linear-gradient(45deg, #c0392b, #a93226);
+            transform: translateY(-1px);
+        }
+
+        .reset-filters-btn:active {
+            transform: translateY(0);
+        }
+        .reset-filters-btn {
+            width: 100%;
+            padding: 8px 12px;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .reset-filters-btn:hover {
+            background: linear-gradient(45deg, #c0392b, #a93226);
+            transform: translateY(-1px);
+        }
+
+        .reset-filters-btn:active {
+            transform: translateY(0);
         }
     </style>
 </head>
@@ -412,7 +501,7 @@
             <div class="filter-section" id="filtersSection" style="display: none;">
                 <h3>🔍 Filters</h3>
                 <div id="dynamicFilters">
-                    <!-- Dynamic filters will be populated here -->
+                    <!-- Dynamic filter switches will be populated here -->
                 </div>
             </div>
 
@@ -749,36 +838,39 @@
             updateStats();
         }
 
-        // Setup dynamic filters - only for specific lang and resources fields
+        // Setup dynamic filters with toggle switches
         function setupDynamicFilters() {
             if (!originalData || originalData.length === 0) return;
 
             const filtersContainer = document.getElementById('dynamicFilters');
             filtersContainer.innerHTML = '';
             
-            // Look specifically for exact field names
-            const targetFields = {};
-            
-            // Check for exact field names
-            if (originalData[0].hasOwnProperty('lang')) {
-                targetFields['lang'] = {
+            // Define custom order for filter values
+            const filterConfig = {
+                'lang': {
                     label: 'By Language',
-                    icon: '🗣️'
-                };
-            }
+                    icon: '🗣️',
+                    order: ['english', 'spanish', 'creole', 'french', 'other']
+                },
+                'group_res/Resources': {
+                    label: 'By Resources', 
+                    icon: '📋',
+                    order: ['food', 'clothing', 'home_articles', 'other']
+                }
+            };
             
-            if (originalData[0].hasOwnProperty('group_res/Resources')) {
-                targetFields['group_res/Resources'] = {
-                    label: 'By Resources',
-                    icon: '📋'
-                };
-            }
+            // Check which fields exist in the data
+            const availableFields = {};
+            Object.keys(filterConfig).forEach(field => {
+                if (originalData[0].hasOwnProperty(field)) {
+                    availableFields[field] = filterConfig[field];
+                }
+            });
             
-            console.log('Target filter fields found:', Object.keys(targetFields));
-            console.log('Available fields in data:', Object.keys(originalData[0]));
+            console.log('Available filter fields:', Object.keys(availableFields));
             
-            // Create filter controls for each target field
-            for (const [field, config] of Object.entries(targetFields)) {
+            // Create filter controls for each available field
+            Object.entries(availableFields).forEach(([field, config]) => {
                 // Get unique values for this field (space-separated)
                 const allValues = originalData
                     .map(item => item[field])
@@ -786,15 +878,37 @@
                     .map(v => v.split(' ').map(s => s.trim()).filter(s => s !== ''))
                     .flat();
                 
-                const uniqueValues = [...new Set(allValues)].sort();
+                const uniqueValues = [...new Set(allValues)];
                 
                 if (uniqueValues.length === 0) {
                     console.log(`No values found for field: ${field}`);
-                    continue;
+                    return;
                 }
                 
-                console.log(`Creating filter for ${field} with values:`, uniqueValues);
+                // Sort values according to specified order
+                const orderedValues = [];
                 
+                // First, add values in the specified order if they exist
+                config.order.forEach(orderedValue => {
+                    const foundValue = uniqueValues.find(value => 
+                        value.toLowerCase() === orderedValue.toLowerCase()
+                    );
+                    if (foundValue) {
+                        orderedValues.push(foundValue);
+                    }
+                });
+                
+                // Then add any remaining values that weren't in the order specification
+                uniqueValues.forEach(value => {
+                    if (!orderedValues.some(orderedValue => 
+                        orderedValue.toLowerCase() === value.toLowerCase())) {
+                        orderedValues.push(value);
+                    }
+                });
+                
+                console.log(`Creating filter for ${field} with ordered values:`, orderedValues);
+                
+                // Create the filter section
                 const filterDiv = document.createElement('div');
                 filterDiv.className = 'filter-section';
                 
@@ -802,46 +916,84 @@
                 label.textContent = `${config.icon} ${config.label}`;
                 filterDiv.appendChild(label);
                 
-                const buttonContainer = document.createElement('div');
-                buttonContainer.className = 'filter-buttons';
+                const switchContainer = document.createElement('div');
+                switchContainer.className = 'filter-switches';
                 
-                uniqueValues.forEach(value => {
-                    const button = document.createElement('button');
-                    button.className = 'filter-button';
-                    button.textContent = value;
-                    button.setAttribute('data-field', field);
-                    button.setAttribute('data-value', value);
-                    button.addEventListener('click', toggleFilter);
+                // Create toggle switches in the specified order
+                orderedValues.forEach(value => {
+                    const switchItem = document.createElement('div');
+                    switchItem.className = 'filter-switch-item';
                     
-                    buttonContainer.appendChild(button);
+                    const switchLabel = document.createElement('label');
+                    switchLabel.className = 'filter-switch-label';
+                    switchLabel.textContent = value;
+                    
+                    const switchWrapper = document.createElement('label');
+                    switchWrapper.className = 'switch';
+                    
+                    const switchInput = document.createElement('input');
+                    switchInput.type = 'checkbox';
+                    switchInput.setAttribute('data-field', field);
+                    switchInput.setAttribute('data-value', value);
+                    switchInput.addEventListener('change', toggleSwitch);
+                    
+                    const slider = document.createElement('span');
+                    slider.className = 'slider';
+                    
+                    switchWrapper.appendChild(switchInput);
+                    switchWrapper.appendChild(slider);
+                    
+                    switchItem.appendChild(switchLabel);
+                    switchItem.appendChild(switchWrapper);
+                    
+                    switchContainer.appendChild(switchItem);
                 });
                 
-                filterDiv.appendChild(buttonContainer);
+                filterDiv.appendChild(switchContainer);
                 filtersContainer.appendChild(filterDiv);
-            }
+            });
             
-            if (Object.keys(targetFields).length > 0) {
+            // Add Reset All Filters button
+            if (Object.keys(availableFields).length > 0) {
+                const resetButton = document.createElement('button');
+                resetButton.className = 'reset-filters-btn';
+                resetButton.textContent = '🔄 Reset All Filters';
+                resetButton.addEventListener('click', resetAllFilters);
+                filtersContainer.appendChild(resetButton);
+                
                 document.getElementById('filtersSection').style.display = 'block';
             } else {
                 console.log('No target fields found. Available fields:', Object.keys(originalData[0]));
             }
         }
 
-        // Toggle filter button state
-        function toggleFilter(event) {
-            const button = event.target;
-            button.classList.toggle('active');
+        // Toggle switch state
+        function toggleSwitch(event) {
             applyFilters();
+        }
+
+        // Reset all filters
+        function resetAllFilters() {
+            // Turn off all switches
+            const allSwitches = document.querySelectorAll('#dynamicFilters input[type="checkbox"]');
+            allSwitches.forEach(switchInput => {
+                switchInput.checked = false;
+            });
+            
+            // Apply filters (which will show all data since no filters are active)
+            applyFilters();
+            
+            console.log('All filters reset');
         }
 
         // Apply filters
         function applyFilters() {
-            const activeButtons = document.querySelectorAll('#dynamicFilters .filter-button.active');
+            const activeSwitches = document.querySelectorAll('#dynamicFilters input[type="checkbox"]:checked');
             const activeFilters = {};
             
-            activeButtons.forEach(button => {
-                const field = button.getAttribute('data-field');
-                const value = button.getAttribute('data-value');
+            activeSwitches.forEach(switchInput => {
+                const field = switchInput.getAttribute('data-field');
+                const value = switchInput.getAttribute('data-value');
                 
                 if (!activeFilters[field]) {
                     activeFilters[field] = [];
@@ -1309,12 +1461,9 @@
             
             // Try to add to right sidebar first, fallback to main sidebar
             const rightErrorContainer = document.getElementById('rightErrorMessages');
-            const mainErrorContainer = document.getElementById('errorMessages');
             
             if (rightErrorContainer) {
                 rightErrorContainer.appendChild(successDiv);
-            } else if (mainErrorContainer) {
-                mainErrorContainer.appendChild(successDiv);
             }
             
             setTimeout(() => {
@@ -1329,12 +1478,9 @@
             
             // Try to add to right sidebar first, fallback to main sidebar
             const rightErrorContainer = document.getElementById('rightErrorMessages');
-            const mainErrorContainer = document.getElementById('errorMessages');
             
             if (rightErrorContainer) {
                 rightErrorContainer.appendChild(errorDiv);
-            } else if (mainErrorContainer) {
-                mainErrorContainer.appendChild(errorDiv);
             }
             
             setTimeout(() => {
