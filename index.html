@@ -324,7 +324,7 @@
 
         .maplibregl-popup-content {
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
@@ -421,21 +421,7 @@
         }
 
         /* Reset Button Styles */
-        .reset-filters-btn {
-            width: 100%;
-            padding: 8px 12px;
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+
 
         .reset-filters-btn:hover {
             background: linear-gradient(45deg, #c0392b, #a93226);
@@ -453,11 +439,9 @@
             border: none;
             border-radius: 6px;
             font-size: 12px;
-            font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
             margin-top: 12px;
-            text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
@@ -518,6 +502,7 @@
         let filteredData = [];
         let userLocationMarker = null;
         let userLocation = null;
+        let isInitialLoad = true;
 
         // Function to calculate distance between two coordinates (in miles)
         function calculateDistance(lat1, lng1, lat2, lng2) {
@@ -559,7 +544,7 @@
                         'source': 'osm'
                     }]
                 },
-                center: [-75.1652, 39.9526], // Philadelphia default
+                center: [-75.23238, 39.98570], // Philadelphia default
                 zoom: 11
             });
 
@@ -687,9 +672,8 @@
             // Add popup to user marker
             const popup = new maplibregl.Popup({ offset: 25 })
                 .setHTML(`
-                    <div style="padding: 10px;">
+                    <div style="padding: 4px;">
                         <h3 style="margin: 0 0 5px 0; color: #2c3e50;">📍 Your Location</h3>
-                        <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Search center</p>
                     </div>
                 `);
 
@@ -957,7 +941,7 @@
             if (Object.keys(availableFields).length > 0) {
                 const resetButton = document.createElement('button');
                 resetButton.className = 'reset-filters-btn';
-                resetButton.textContent = '🔄 Reset All Filters';
+                resetButton.textContent = '🔄 Reset All';
                 resetButton.addEventListener('click', resetAllFilters);
                 filtersContainer.appendChild(resetButton);
                 
@@ -1102,7 +1086,13 @@
                 features.forEach(feature => {
                     bounds.extend(feature.geometry.coordinates);
                 });
-                map.fitBounds(bounds, { padding: 50 });
+                if (isInitialLoad) {
+                    // Don't auto-zoom on initial load, keep default zoom
+                    isInitialLoad = false;
+                } else {
+                    // Only auto-zoom when filters are applied
+                    map.fitBounds(bounds, { padding: 50, maxZoom: 15 });
+                }
             }
             
             console.log(`Successfully added ${features.length} points to map`);
@@ -1134,7 +1124,7 @@
                 if (properties.lang && properties.lang !== '') {
                     const languages = properties.lang.split(' ').filter(lang => lang.trim() !== '').map(lang => 
                         `<span class="language-tag">${lang.trim()}</span>`
-                    ).join('');
+                    ).join(' '); // Add space between language tags
                     popupContent += `<p><strong>🗣️ Languages:</strong><br>${languages}</p>`;
                 }
                 
