@@ -17,25 +17,51 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
         }
 
         .container {
             display: flex;
+            flex-direction: row;
             height: 100vh;
             background: rgba(255, 255, 255, 0.95);
             margin: 10px;
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            position: relative;
         }
 
         .sidebar {
-            width: 350px;
+            width: 400px;
+            min-width: 400px;
+            max-width: 400px;
             background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
             color: white;
             padding: 20px;
             overflow-y: auto;
             box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+            display: block;
+        }
+
+        #map {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+            display: block;
+        }
+
+        .right-sidebar {
+            width: 280px;
+            min-width: 280px;
+            max-width: 280px;
+            background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            padding: 15px;
+            overflow-y: auto;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            display: block;
         }
 
         .sidebar h1 {
@@ -45,6 +71,15 @@
             text-align: center;
             border-bottom: 2px solid #3498db;
             padding-bottom: 10px;
+        }
+
+        .right-sidebar h1 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #ecf0f1;
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
         }
 
         .data-config {
@@ -60,98 +95,182 @@
             font-size: 16px;
         }
 
-        .load-btn {
+        .address-search {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .address-search h3 {
+            color: #3498db;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .search-input {
             width: 100%;
-            padding: 12px;
-            background: linear-gradient(45deg, #3498db, #2980b9);
+            padding: 10px;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 5px;
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
-            margin-bottom: 10px;
             transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
-        .load-btn:hover {
-            background: linear-gradient(45deg, #2980b9, #1f5582);
+        .search-btn:hover {
+            background: linear-gradient(45deg, #c0392b, #a93226);
         }
 
-        .load-btn:disabled {
+        .search-btn:disabled {
             background: #7f8c8d;
             cursor: not-allowed;
         }
 
-        .stats {
+        .congregation-list {
             background: rgba(255, 255, 255, 0.1);
             padding: 15px;
             border-radius: 10px;
-            text-align: center;
             margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
         }
 
-        .stats-number {
-            font-size: 32px;
+        .congregation-list h3 {
+            color: #3498db;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .congregation-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .congregation-item:hover {
+            background: rgba(52, 152, 219, 0.2);
+            border-left-color: #3498db;
+            transform: translateX(5px);
+        }
+
+        .congregation-item.active {
+            background: rgba(52, 152, 219, 0.3);
+            border-left-color: #3498db;
+        }
+
+        .congregation-name {
+            font-weight: bold;
+            color: #ecf0f1;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .congregation-distance {
+            color: #3498db;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .congregation-address {
+            color: #bdc3c7;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .congregation-resources {
+            font-size: 11px;
+        }
+
+        .resource-tag {
+            display: inline-block;
+            background: rgba(46, 204, 113, 0.8);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin: 1px;
+            font-size: 10px;
+        }
+
+        .right-sidebar .stats {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .right-sidebar .stats-number {
+            font-size: 24px;
             font-weight: bold;
             color: #3498db;
             display: block;
         }
 
-        .stats-label {
-            font-size: 14px;
+        .right-sidebar .stats-label {
+            font-size: 12px;
             color: #ecf0f1;
-            margin-top: 5px;
+            margin-top: 3px;
         }
 
-        .filter-section {
-            margin-bottom: 20px;
+        .right-sidebar .filter-section {
+            margin-bottom: 15px;
             background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
+            padding: 12px;
+            border-radius: 8px;
         }
 
-        .filter-section h3 {
+        .right-sidebar .filter-section h3 {
             color: #3498db;
-            margin-bottom: 12px;
-            font-size: 16px;
+            margin-bottom: 10px;
+            font-size: 14px;
         }
 
-        .filter-buttons {
+        .right-sidebar .filter-buttons {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
         }
 
-        .filter-button {
-            padding: 8px 12px;
+        .right-sidebar .filter-button {
+            padding: 6px 10px;
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: 1px solid rgba(52, 152, 219, 0.5);
-            border-radius: 20px;
-            font-size: 12px;
+            border-radius: 15px;
+            font-size: 11px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-transform: capitalize;
         }
 
-        .filter-button:hover {
+        .right-sidebar .filter-button:hover {
             background: rgba(52, 152, 219, 0.3);
             transform: translateY(-1px);
         }
 
-        .filter-button.active {
+        .right-sidebar .filter-button.active {
             background: #3498db;
             border-color: #2980b9;
             transform: translateY(-1px);
             box-shadow: 0 2px 8px rgba(52, 152, 219, 0.4);
-        }
-
-        #map {
-            flex: 1;
-            position: relative;
         }
 
         .maplibregl-popup-content {
@@ -266,13 +385,24 @@
 <body>
     <div class="container">
         <div class="sidebar">
-            <h1>KoboToolbox Data Map</h1>
+            <h1>Resources Map</h1>
             
-            <div class="data-config">
-                <h3>📡 Data Source</h3>
-                <p style="font-size: 12px; margin-bottom: 10px;">Loading data from static JSON file</p>
-                <button id="loadData" class="load-btn">Load Data</button>
+            <div class="address-search">
+                <h3>🔍 Find Nearby Congregations</h3>
+                <input type="text" id="addressInput" class="search-input" placeholder="Enter your address (e.g., 1234 Main St, Philadelphia, PA)">
+                <button id="searchBtn" class="search-btn">Search Nearby</button>
             </div>
+            
+            <div id="congregationList" class="congregation-list" style="display: none;">
+                <h3>📍 Congregations Near You</h3>
+                <div id="listingsContainer"></div>
+            </div>
+        </div>
+
+        <div id="map"></div>
+        
+        <div class="right-sidebar">
+            <h1>📊 Filter Map</h1>
             
             <div class="stats">
                 <span class="stats-number" id="recordCount">0</span>
@@ -286,10 +416,8 @@
                 </div>
             </div>
 
-            <div id="errorMessages"></div>
+            <div id="rightErrorMessages"></div>
         </div>
-
-        <div id="map"></div>
     </div>
 
     <div id="loading" class="loading" style="display: none;">Loading data...</div>
@@ -299,6 +427,28 @@
         let map;
         let originalData = [];
         let filteredData = [];
+        let userLocationMarker = null;
+        let userLocation = null;
+
+        // Function to calculate distance between two coordinates (in miles)
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 3959; // Earth's radius in miles
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Function to convert text to sentence case
+        function toSentenceCase(str) {
+            if (!str) return str;
+            return str.toLowerCase().replace(/\b\w/g, function(match) {
+                return match.toUpperCase();
+            });
+        }
 
         // Initialize the map
         function initMap() {
@@ -326,7 +476,219 @@
 
             map.on('load', () => {
                 setupMapInteractions();
+                setupAddressSearch();
+                // Automatically load data when map is ready
+                loadData();
             });
+        }
+
+        // Setup address search functionality
+        function setupAddressSearch() {
+            const searchBtn = document.getElementById('searchBtn');
+            const addressInput = document.getElementById('addressInput');
+            
+            searchBtn.addEventListener('click', handleAddressSearch);
+            addressInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleAddressSearch();
+                }
+            });
+        }
+
+        // Handle address search
+        async function handleAddressSearch() {
+            const address = document.getElementById('addressInput').value.trim();
+            
+            if (!address) {
+                showError('Please enter an address');
+                return;
+            }
+
+            try {
+                showLoading('Searching for address...');
+                const coordinates = await geocodeAddress(address);
+                
+                if (coordinates) {
+                    userLocation = coordinates;
+                    addUserLocationMarker(coordinates);
+                    showNearbyConggregations(coordinates);
+                    
+                    // Fly to the user's location
+                    map.flyTo({
+                        center: [coordinates.lng, coordinates.lat],
+                        zoom: 12
+                    });
+                    
+                    showSuccess(`Found address: ${address}`);
+                } else {
+                    showError('Address not found in the Philadelphia area. Please try an address within 50 miles of Philadelphia.');
+                }
+            } catch (error) {
+                console.error('Geocoding error:', error);
+                showError('Error finding address. Please try again.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Geocode address using Nominatim (OpenStreetMap) - Limited to Philadelphia area
+        async function geocodeAddress(address) {
+            try {
+                // Philadelphia bounding box (approximately 50 miles radius)
+                // Southwest: 39.7, -75.8  Northeast: 40.3, -74.8
+                const boundingBox = '-75.8,39.7,-74.8,40.3'; // left,bottom,right,top
+                
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&bounded=1&viewbox=${boundingBox}&countrycodes=us`
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    const result = {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon),
+                        displayName: data[0].display_name
+                    };
+                    
+                    // Double-check that the result is within Philadelphia area
+                    if (result.lat >= 39.7 && result.lat <= 40.3 && 
+                        result.lng >= -75.8 && result.lng <= -74.8) {
+                        return result;
+                    } else {
+                        console.log('Address found outside Philadelphia area bounds');
+                        return null;
+                    }
+                }
+                
+                return null;
+            } catch (error) {
+                console.error('Geocoding error:', error);
+                return null;
+            }
+        }
+
+        // Add marker for user's searched location
+        function addUserLocationMarker(coordinates) {
+            // Remove existing user location marker
+            if (userLocationMarker) {
+                userLocationMarker.remove();
+            }
+
+            // Create user location marker
+            const markerElement = document.createElement('div');
+            markerElement.style.cssText = `
+                width: 20px;
+                height: 20px;
+                background-color: #e74c3c;
+                border: 3px solid white;
+                border-radius: 50%;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                cursor: pointer;
+            `;
+
+            userLocationMarker = new maplibregl.Marker(markerElement)
+                .setLngLat([coordinates.lng, coordinates.lat])
+                .addTo(map);
+
+            // Add popup to user marker
+            const popup = new maplibregl.Popup({ offset: 25 })
+                .setHTML(`
+                    <div style="padding: 10px;">
+                        <h3 style="margin: 0 0 5px 0; color: #2c3e50;">📍 Your Location</h3>
+                        <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Search center</p>
+                    </div>
+                `);
+
+            userLocationMarker.setPopup(popup);
+        }
+
+        // Show nearby congregations sorted by distance
+        function showNearbyConggregations(userCoords) {
+            if (!filteredData || filteredData.length === 0) {
+                showError('No congregation data available');
+                return;
+            }
+
+            // Calculate distances and sort
+            const congregationsWithDistance = filteredData.map(congregation => {
+                const congLat = parseFloat(congregation._geolocation[0]);
+                const congLng = parseFloat(congregation._geolocation[1]);
+                const distance = calculateDistance(userCoords.lat, userCoords.lng, congLat, congLng);
+                
+                return {
+                    ...congregation,
+                    distance: distance
+                };
+            }).sort((a, b) => a.distance - b.distance);
+
+            // Display the list
+            displayCongregationList(congregationsWithDistance);
+        }
+
+        // Display congregation list in sidebar
+        function displayCongregationList(congregations) {
+            const listContainer = document.getElementById('listingsContainer');
+            const congregationListDiv = document.getElementById('congregationList');
+            
+            listContainer.innerHTML = '';
+            
+            congregations.forEach((congregation, index) => {
+                const listItem = document.createElement('div');
+                listItem.className = 'congregation-item';
+                listItem.id = `congregation-${congregation._id}`;
+                
+                const name = toSentenceCase(congregation.cong_name || 'Unknown Congregation');
+                const distance = congregation.distance.toFixed(1);
+                const resources = congregation['group_res/Resources'] ? 
+                    congregation['group_res/Resources'].split(' ').map(r => 
+                        `<span class="resource-tag">${r}</span>`
+                    ).join('') : '';
+                
+                listItem.innerHTML = `
+                    <div class="congregation-name">${name}</div>
+                    <div class="congregation-distance">${distance} miles away</div>
+                    <div class="congregation-address">${congregation.address || 'Address not available'}</div>
+                    ${resources ? `<div class="congregation-resources">${resources}</div>` : ''}
+                `;
+                
+                // Add click event to fly to congregation and show popup
+                listItem.addEventListener('click', () => {
+                    // Remove active class from all items
+                    document.querySelectorAll('.congregation-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked item
+                    listItem.classList.add('active');
+                    
+                    // Fly to congregation
+                    const congLat = parseFloat(congregation._geolocation[0]);
+                    const congLng = parseFloat(congregation._geolocation[1]);
+                    
+                    map.flyTo({
+                        center: [congLng, congLat],
+                        zoom: 15
+                    });
+                    
+                    // Trigger click on the map marker to show popup
+                    setTimeout(() => {
+                        map.fire('click', {
+                            lngLat: { lng: congLng, lat: congLat },
+                            point: map.project([congLng, congLat]),
+                            originalEvent: {}
+                        });
+                    }, 500);
+                });
+                
+                listContainer.appendChild(listItem);
+            });
+            
+            congregationListDiv.style.display = 'block';
         }
 
         // Load data from static JSON file
@@ -400,14 +762,14 @@
             // Check for exact field names
             if (originalData[0].hasOwnProperty('lang')) {
                 targetFields['lang'] = {
-                    label: 'Languages',
+                    label: 'By Language',
                     icon: '🗣️'
                 };
             }
             
             if (originalData[0].hasOwnProperty('group_res/Resources')) {
                 targetFields['group_res/Resources'] = {
-                    label: 'Resources',
+                    label: 'By Resources',
                     icon: '📋'
                 };
             }
@@ -602,8 +964,8 @@
 
                 let popupContent = '<div class="popup-content">';
                 
-                // Congregation name
-                const congName = properties.cong_name || properties.name || 'Unknown Congregation';
+                // Congregation name - convert to sentence case
+                const congName = toSentenceCase(properties.cong_name) || toSentenceCase(properties.name) || 'Unknown Congregation';
                 popupContent += `<h3>${congName}</h3>`;
                 
                 // Address
@@ -944,7 +1306,16 @@
             const successDiv = document.createElement('div');
             successDiv.className = 'success-message';
             successDiv.textContent = message;
-            document.getElementById('errorMessages').appendChild(successDiv);
+            
+            // Try to add to right sidebar first, fallback to main sidebar
+            const rightErrorContainer = document.getElementById('rightErrorMessages');
+            const mainErrorContainer = document.getElementById('errorMessages');
+            
+            if (rightErrorContainer) {
+                rightErrorContainer.appendChild(successDiv);
+            } else if (mainErrorContainer) {
+                mainErrorContainer.appendChild(successDiv);
+            }
             
             setTimeout(() => {
                 successDiv.remove();
@@ -955,7 +1326,16 @@
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
             errorDiv.textContent = message;
-            document.getElementById('errorMessages').appendChild(errorDiv);
+            
+            // Try to add to right sidebar first, fallback to main sidebar
+            const rightErrorContainer = document.getElementById('rightErrorMessages');
+            const mainErrorContainer = document.getElementById('errorMessages');
+            
+            if (rightErrorContainer) {
+                rightErrorContainer.appendChild(errorDiv);
+            } else if (mainErrorContainer) {
+                mainErrorContainer.appendChild(errorDiv);
+            }
             
             setTimeout(() => {
                 errorDiv.remove();
@@ -965,7 +1345,7 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             initMap();
-            document.getElementById('loadData').addEventListener('click', loadData);
+            // Data loading is now automatic when map loads
         });
     </script>
 </body>
