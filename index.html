@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NSM Interactive Map</title>
+    <title>Mapa Interactivo NSM</title>
     <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
     <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
     <style>
@@ -458,16 +458,16 @@
 <body>
     <div class="container">
         <div class="sidebar">
-            <h1>Resources Map</h1>
+            <h1>Mapa de Recursos</h1>
             
             <div class="address-search">
-                <h3>🔍 Find Nearby Congregations</h3>
+                <h3>🔍 Congregaciones cercanas</h3>
                 <input type="text" id="addressInput" class="search-input" placeholder="Enter your address (e.g., 1234 Main St, Philadelphia, PA)">
-                <button id="searchBtn" class="search-btn">Search Nearby</button>
+                <button id="searchBtn" class="search-btn">Buscar</button>
             </div>
             
             <div id="congregationList" class="congregation-list" style="display: none;">
-                <h3>📍 Congregations Near You</h3>
+                <h3>📍 Congregaciones cercanas</h3>
                 <div id="listingsContainer"></div>
             </div>
         </div>
@@ -475,15 +475,15 @@
         <div id="map"></div>
         
         <div class="right-sidebar">
-            <h1>📊 Filter Map</h1>
+            <h1>📊 Filtrar Mapa</h1>
             
             <div class="stats">
                 <span class="stats-number" id="recordCount">0</span>
-                <span class="stats-label">Records Found</span>
+                <span class="stats-label">Congregaciones</span>
             </div>
 
             <div class="filter-section" id="filtersSection" style="display: none;">
-                <h3>🔍 Filters</h3>
+                <h3>🔍 Filtros</h3>
                 <div id="dynamicFilters">
                     <!-- Dynamic filter switches will be populated here -->
                 </div>
@@ -493,7 +493,7 @@
         </div>
     </div>
 
-    <div id="loading" class="loading" style="display: none;">Loading data...</div>
+    <div id="loading" class="loading" style="display: none;">Cargando datos...</div>
 
     <script>
         // Global variables
@@ -574,12 +574,12 @@
             const address = document.getElementById('addressInput').value.trim();
             
             if (!address) {
-                showError('Please enter an address');
+                showError('Por favor ingresa una dirección válida.');
                 return;
             }
 
             try {
-                showLoading('Searching for address...');
+                showLoading('Buscando dirección...');
                 const coordinates = await geocodeAddress(address);
                 
                 if (coordinates) {
@@ -593,13 +593,13 @@
                         zoom: 12
                     });
                     
-                    showSuccess(`Found address: ${address}`);
+                    showSuccess(`Dirección encontrada: ${address}`);
                 } else {
-                    showError('Address not found in the Philadelphia area. Please try an address within 50 miles of Philadelphia.');
+                    showError('Difección no encontrada. Por favor intenta con una dirección dentro de 50 millas de Filadelfia');
                 }
             } catch (error) {
-                console.error('Geocoding error:', error);
-                showError('Error finding address. Please try again.');
+                console.error('Error de geocodificación:', error);
+                showError('Error al encontrar dirección. Intente de nuevo.');
             } finally {
                 hideLoading();
             }
@@ -634,14 +634,14 @@
                         result.lng >= -75.8 && result.lng <= -74.8) {
                         return result;
                     } else {
-                        console.log('Address found outside Philadelphia area bounds');
+                        console.log('Dirección encontrada fuera de Filadelfia.');
                         return null;
                     }
                 }
                 
                 return null;
             } catch (error) {
-                console.error('Geocoding error:', error);
+                console.error('Error de geocodificación:', error);
                 return null;
             }
         }
@@ -664,7 +664,7 @@
             const popup = new maplibregl.Popup({ offset: 25 })
                 .setHTML(`
                     <div style="padding: 4px;">
-                        <h3 style="margin: 0 0 5px 0; color: #2c3e50;">📍 Your Location</h3>
+                        <h3 style="margin: 0 0 5px 0; color: #2c3e50;">📍 Tu ubicación</h3>
                     </div>
                 `);
 
@@ -674,7 +674,7 @@
         // Show nearby congregations sorted by distance
         function showNearbyConggregations(userCoords) {
             if (!filteredData || filteredData.length === 0) {
-                showError('No congregation data available');
+                showError('No existen datos de la congregación.');
                 return;
             }
 
@@ -710,13 +710,13 @@
                 const distance = congregation.distance.toFixed(1);
                 const resources = congregation['group_res/Resources'] ? 
                     congregation['group_res/Resources'].split(' ').map(r => 
-                        `<span class="resource-tag">${r}</span>`
+                        `<span class="resource-tag">${translateToSpanish(r)}</span>`
                     ).join('') : '';
                 
                 listItem.innerHTML = `
                     <div class="congregation-name">${name}</div>
-                    <div class="congregation-distance">${distance} miles away</div>
-                    <div class="congregation-address">${congregation.address || 'Address not available'}</div>
+                    <div class="congregation-distance">${distance} millas</div>
+                    <div class="congregation-address">${congregation.address || 'Dirección no válida'}</div>
                     ${resources ? `<div class="congregation-resources">${resources}</div>` : ''}
                 `;
                 
@@ -764,7 +764,7 @@
                 const response = await fetch('./data.json');
                 
                 if (!response.ok) {
-                    throw new Error(`Failed to load data: ${response.status}`);
+                    throw new Error(`Error al leer datos: ${response.status}`);
                 }
 
                 const data = await response.json();
@@ -772,17 +772,17 @@
                 // Handle both direct array and nested results structure
                 originalData = data.results || data || [];
                 
-                console.log('Loaded data:', originalData.length, 'records');
+                console.log('Datos cargados:', originalData.length, 'registros');
                 
                 processData();
                 setupDynamicFilters();
                 updateMap();
                 
-                showSuccess(`${originalData.length} records loaded`);
+                showSuccess(`${originalData.length} registros cargados`);
                 
             } catch (error) {
-                console.error('Error loading data:', error);
-                showError(`Error loading data: ${error.message}`);
+                console.error('Error al leer datos:', error);
+                showError(`Error al leer datos: ${error.message}`);
             } finally {
                 hideLoading();
             }
@@ -790,7 +790,7 @@
 
         // Process the data
         function processData() {
-            console.log('Processing data...');
+            console.log('Procesando los datos...');
             
             if (originalData.length > 0) {
                 console.log('Available fields:', Object.keys(originalData[0]));
@@ -809,8 +809,25 @@
                 return !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
             });
             
-            console.log(`Filtered data: ${originalData.length} -> ${filteredData.length} records with valid coordinates`);
+            console.log(`Datos filtrados: ${originalData.length} -> ${filteredData.length} registros con coordenadas válidas`);
             updateStats();
+        }
+
+        // Translation map for filter labels to Spanish
+        const translations = {
+            'english': 'inglés',
+            'spanish': 'español',
+            'creole': 'criollo',
+            'french': 'francés',
+            'other': 'otro',
+            'food': 'comida',
+            'clothing': 'ropa',
+            'home_articles': 'artículos del hogar'
+        };
+        
+        // Function to translate filter values to Spanish
+        function translateToSpanish(value) {
+            return translations[value.toLowerCase()] || value;
         }
 
         // Setup dynamic filters with toggle switches
@@ -823,12 +840,12 @@
             // Define custom order for filter values
             const filterConfig = {
                 'lang': {
-                    label: 'By Language',
+                    label: 'Por Idioma',
                     icon: '🗣️',
                     order: ['english', 'spanish', 'creole', 'french', 'other']
                 },
                 'group_res/Resources': {
-                    label: 'By Resources', 
+                    label: 'Por Recursos', 
                     icon: '📋',
                     order: ['food', 'clothing', 'home_articles', 'other']
                 }
@@ -842,7 +859,7 @@
                 }
             });
             
-            console.log('Available filter fields:', Object.keys(availableFields));
+            console.log('Filtros disponibles:', Object.keys(availableFields));
             
             // Create filter controls for each available field
             Object.entries(availableFields).forEach(([field, config]) => {
@@ -901,7 +918,7 @@
                     
                     const switchLabel = document.createElement('label');
                     switchLabel.className = 'filter-switch-label';
-                    switchLabel.textContent = value;
+                    switchLabel.textContent = translateToSpanish(value);
                     
                     const switchWrapper = document.createElement('label');
                     switchWrapper.className = 'switch';
@@ -932,7 +949,7 @@
             if (Object.keys(availableFields).length > 0) {
                 const resetButton = document.createElement('button');
                 resetButton.className = 'reset-filters-btn';
-                resetButton.textContent = '🔄 Clear All';
+                resetButton.textContent = '🔄 Limpiar filtros';
                 resetButton.addEventListener('click', resetAllFilters);
                 filtersContainer.appendChild(resetButton);
                 
@@ -1116,12 +1133,12 @@
                 
                 // Address
                 if (properties.address) {
-                    popupContent += `<p><strong>📍 Address:</strong> ${properties.address}</p>`;
+                    popupContent += `<p><strong>📍 Dirección:</strong> ${properties.address}</p>`;
                 }
                 
                 // Phone
                 if (properties.phone) {
-                    popupContent += `<p><strong>📞 Phone:</strong> ${properties.phone}</p>`;
+                    popupContent += `<p><strong>📞 Teléfono:</strong> ${properties.phone}</p>`;
                 }
                 
                 // Languages
@@ -1129,19 +1146,19 @@
                     const languages = properties.lang.split(' ').filter(lang => lang.trim() !== '').map(lang => 
                         `<span class="language-tag">${lang.trim()}</span>`
                     ).join(' '); // Add space between language tags
-                    popupContent += `<p><strong>🗣️ Languages:</strong><br>${languages}</p>`;
+                    popupContent += `<p><strong>🗣️ Idiomas:</strong><br>${languages}</p>`;
                 }
                 
                 // Available Resources with buttons
                 if (properties['group_res/Resources'] && properties['group_res/Resources'] !== '') {
                     const resources = properties['group_res/Resources'].split(' ').filter(res => res.trim() !== '');
                     
-                    popupContent += `<p><strong>📋 Available Resources:</strong></p>`;
+                    popupContent += `<p><strong>📋 Recursos disponibles:</strong></p>`;
                     popupContent += `<div class="resources-container">`;
                     
                     resources.forEach(resource => {
                         const resourceId = `resource-${Math.random().toString(36).substr(2, 9)}`;
-                        popupContent += `<button class="service-tag" onclick="toggleResourceDetails('${resourceId}', '${resource}', this)" data-resource="${resource}">${resource}</button>`;
+                        popupContent += `<button class="service-tag" onclick="toggleResourceDetails('${resourceId}', '${resource}', this)" data-resource="${resource}">${translateToSpanish(resource)}</button>`;
                         popupContent += `<div id="${resourceId}" class="service-details"></div>`;
                     });
                     
@@ -1199,7 +1216,7 @@
             console.log('Getting details for resource:', resourceName);
             console.log('Available properties:', Object.keys(properties));
             
-            let details = `<h4>${resourceName} Service Details</h4><div class="service-info">`;
+            let details = `<h4>${resourceName} Detalles del servicio</h4><div class="service-info">`;
             
             // Map resource names to their corresponding field paths (now handling arrays)
             const resourceFieldMap = {
