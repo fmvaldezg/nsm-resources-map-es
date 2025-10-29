@@ -363,7 +363,7 @@
         }
 
         .success-message {
-            background: #27ae60;
+            background: #34495e;
             color: white;
             padding: 10px;
             border-radius: 5px;
@@ -653,19 +653,10 @@
                 userLocationMarker.remove();
             }
 
-            // Create user location marker
-            const markerElement = document.createElement('div');
-            markerElement.style.cssText = `
-                width: 20px;
-                height: 20px;
-                background-color: #e74c3c;
-                border: 3px solid white;
-                border-radius: 50%;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-                cursor: pointer;
-            `;
-
-            userLocationMarker = new maplibregl.Marker(markerElement)
+            // Create user location marker with custom color
+            userLocationMarker = new maplibregl.Marker({
+                color: '#e91e63' // Purple color
+            })
                 .setLngLat([coordinates.lng, coordinates.lat])
                 .addTo(map);
 
@@ -787,7 +778,7 @@
                 setupDynamicFilters();
                 updateMap();
                 
-                showSuccess(`Successfully loaded ${originalData.length} records`);
+                showSuccess(`${originalData.length} records loaded`);
                 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -941,7 +932,7 @@
             if (Object.keys(availableFields).length > 0) {
                 const resetButton = document.createElement('button');
                 resetButton.className = 'reset-filters-btn';
-                resetButton.textContent = '🔄 Reset All';
+                resetButton.textContent = '🔄 Clear All';
                 resetButton.addEventListener('click', resetAllFilters);
                 filtersContainer.appendChild(resetButton);
                 
@@ -953,6 +944,19 @@
 
         // Toggle switch state
         function toggleSwitch(event) {
+            const clickedSwitch = event.target;
+            const field = clickedSwitch.getAttribute('data-field');
+            
+            // If the switch was just turned ON, turn off all other switches in the same category
+            if (clickedSwitch.checked) {
+                const allSwitchesInCategory = document.querySelectorAll(`#dynamicFilters input[data-field="${field}"]`);
+                allSwitchesInCategory.forEach(switchInput => {
+                    if (switchInput !== clickedSwitch) {
+                        switchInput.checked = false;
+                    }
+                });
+            }
+            
             applyFilters();
         }
 
